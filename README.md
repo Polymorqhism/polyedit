@@ -17,7 +17,6 @@
 > polyedit is unfinished. Expect bugs; do not use this for high value files.
 ---
 
-
 ## polyedit
 - Minimal editor.
-- More to be added upon development beginning.
+- Intended for and developed for the standard GNU/Linux kernel. There is no guarantee that this may work on Windows or any other operating system/kernel.
