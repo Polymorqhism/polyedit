@@ -1,8 +1,10 @@
 #include <termios.h>
+#include <stdio.h>
 
 typedef struct {
     char *contents;
     char **lines;
+    char *name;
     long size;
     int line_count;
     int *line_lengths;

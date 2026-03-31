@@ -36,6 +36,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    file->name = argv[1];
+
     system("clear");
     if (handle_file_intake(argv[1], file)) {
         free(file);

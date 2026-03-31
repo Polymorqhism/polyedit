@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -6,6 +7,27 @@
 #include <sys/stat.h>
 #include <termios.h>
 #include <unistd.h>
+
+void disable_raw_mode()
+{
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
+    system("clear");
+}
+
+void insert_key(char key, Cursor *cur, TargetFile *file)
+{
+        file->lines[cur->row] = realloc(file->lines[cur->row], file->line_lengths[cur->row] + 2);
+
+        memmove(&file->lines[cur->row][cur->col + 1], &file->lines[cur->row][cur->col], file->line_lengths[cur->row] - cur->col + 1);
+        file->lines[cur->row][cur->col] = key;
+        file->line_lengths[cur->row]++;
+        cur->col++;
+        printf("\x1b[%d;1H", cur->row+1); // sets cursor to beginning
+        printf("\x1b[2K"); // clears line
+        printf("%s", file->lines[cur->row]); // prints new line
+        printf("\x1b[%d;%dH", cur->row+1, cur->col+1); // sets cursor back to original position
+
+}
 
 void handle_key(char key, Cursor *cur, TargetFile *file)
 {
@@ -69,31 +91,52 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
                 }
                 printf("\x1b[%d;%dH", cur->row+1, cur->col+1);
             }
+        } else if(key == 10 || key == 13) {
+            char *new_line = strndup(&file->lines[cur->row][cur->col], file->line_lengths[cur->row] - cur->col);
+            file->lines[cur->row][cur->col] = '\0';
+            file->line_lengths[cur->row] = cur->col;
+            file->lines = realloc(file->lines, (file->line_count + 1) * sizeof(char *));
+            file->line_lengths = realloc(file->line_lengths, (file->line_count + 1) * sizeof(int));
+            memmove(&file->lines[cur->row + 2], &file->lines[cur->row + 1], (file->line_count - cur->row - 1) * sizeof(char *));
+            memmove(&file->line_lengths[cur->row + 2], &file->line_lengths[cur->row + 1], (file->line_count - cur->row - 1) * sizeof(int));
+            file->lines[cur->row + 1] = new_line;
+            file->line_lengths[cur->row + 1] = strlen(new_line);
+            file->line_count++;
+            cur->row++;
+            cur->col = 0;
+            printf("\x1b[%d;1H", cur->row); // one above since that line changed too
+            printf("\x1b[J");
+            for(int i = cur->row - 1; i < file->line_count; i++) {
+                printf("%s\n", file->lines[i]);
+            }
+            printf("\x1b[%d;%dH", cur->row + 1, cur->col + 1);
+        } else if(key == 9) { // handle tab
+            for(int i = 0; i<4; i++) {
+                insert_key(' ', cur, file);
+            }
+        } else if(key == 19) { // handle C-s
+            FILE *fp = fopen(file->name, "w");
+            if(!fp) {
+                return;
+            }
+            for(int i = 0; i<file->line_count; i++) {
+                fwrite(file->lines[i], strlen(file->lines[i]), sizeof(char), fp);
+                fputc('\n', fp);
+            }
+            fclose(fp);
+        }
+        else if(key == 3) {
+            disable_raw_mode();
+            exit(0);
         }
 
         if(!isprint(key)) {
             return;
         }
-
-
-        file->lines[cur->row] = realloc(file->lines[cur->row], file->line_lengths[cur->row] + 2);
-
-        memmove(&file->lines[cur->row][cur->col + 1], &file->lines[cur->row][cur->col], file->line_lengths[cur->row] - cur->col + 1);
-        file->lines[cur->row][cur->col] = key;
-        file->line_lengths[cur->row]++;
-        cur->col++;
-        printf("\x1b[%d;1H", cur->row+1); // sets cursor to beginning
-        printf("\x1b[2K"); // clears line
-        printf("%s", file->lines[cur->row]); // prints new line
-        printf("\x1b[%d;%dH", cur->row+1, cur->col+1); // sets cursor back to original position
+        insert_key(key, cur, file);
     }
 }
 
-void disable_raw_mode()
-{
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
-    system("clear");
-}
 
 void handle_signal(int sig)
 {
@@ -109,7 +152,8 @@ void enable_raw_mode()
     }
 
     struct termios raw = original;
-    raw.c_lflag &= ~(ECHO | ICANON);
+    raw.c_lflag &= ~(ECHO | ICANON | ISIG);
+    raw.c_iflag &= ~(IXON);
     raw.c_cc[VMIN] = 1;
     raw.c_cc[VTIME] = 0;
 
@@ -163,8 +207,6 @@ int handle_file_intake(char *file_name, TargetFile *target)
         fclose(fp);
         return 1;
     }
-
-
 
     char *file_contents = malloc(file_size + 1);
     if (!file_contents) {
