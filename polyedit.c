@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
         perror("File not found");
         return 1;
     }
+    fclose(fp);
 
     setbuf(stdout, NULL);
     atexit(disable_raw_mode);
@@ -69,6 +70,7 @@ int main(int argc, char *argv[])
         file->line_lengths = malloc(sizeof(int));
         file->lines[0] = strdup("");
         file->line_lengths[0] = 0;
+        file->line_count = 1;
     } else {
         file->lines = malloc(num_lines * sizeof(char *));
         file->line_lengths = malloc(num_lines * sizeof(int));
@@ -89,30 +91,31 @@ int main(int argc, char *argv[])
                 }
             }
         }
-
-        Cursor cursor = {0, 0, 0, 0};
-        get_height(&cursor);
-
-        for(int i = 0; i < file->line_count && i < cursor.terminal_height; i++) {
-            printf("%s\n", file->lines[i]);
-        }
-
-        enable_raw_mode();
-        printf("\x1b[1;1H");
-
-
-        char c;
-        while (read(STDIN_FILENO, &c, 1) == 1) {
-            handle_key(c, &cursor, file);
-        }
-
-        for(int i = 0; i < file->line_count; i++) {
-            free(file->lines[i]);
-        }
-        free(file->lines);
-        free(file->line_lengths);
-        free(file->contents);
-        free(file);
-        return 0;
     }
+
+    Cursor cursor = {0, 0, 0, 0};
+    get_height(&cursor);
+
+    for(int i = 0; i < file->line_count && i < cursor.terminal_height; i++) {
+        printf("%s\n", file->lines[i]);
+    }
+
+    enable_raw_mode();
+    printf("\x1b[1;1H");
+
+
+    char c;
+    while (read(STDIN_FILENO, &c, 1) == 1) {
+        handle_key(c, &cursor, file);
+    }
+
+    for(int i = 0; i < file->line_count; i++) {
+        free(file->lines[i]);
+    }
+
+    free(file->lines);
+    free(file->line_lengths);
+    free(file->contents);
+    free(file);
+    return 0;
 }
