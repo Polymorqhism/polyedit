@@ -30,4 +30,5 @@
 
 ---
 v1.0.0-beta
-Starting from v1.0.0-beta, polyedit will be written using polyedit itself.
+- Starting from v1.0.0-beta, polyedit will be written using polyedit itself.
+- GPL-3.0 license. See LICENSE for more information.
