@@ -37,6 +37,18 @@
 
 - Note: TAB is automatically set to 4 spaces.
 
+## Installation:
+- `git clone https://github.com/Polymorqhism/polyedit`
+  - Clone the GitHub repo.
+- `cd polyedit`
+  - Change directory into the cloned repo.
+- `make`
+  - Use the Makefile to make the project into a binary.
+
+- The built binary resides in `build/polyedit`. Optionally, copy it to `/usr/bin/` to access it globally.
+  - `sudo cp build/polyedit /usr/bin/`
+
+
 ## Possible Issues:
 - If the terminal running this is too small, you may encounter issues.
 
