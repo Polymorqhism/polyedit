@@ -20,6 +20,7 @@
 ## What it is:
 - Minimal TUI editor.
 - Developed for systems based on the Linux kernel. Compatibility with other operating systems (e.g., Windows, BSD) is neither guaranteed nor supported.
+- Aims to be lighter than alternatives like nano, micro, emacs and vim while maintaining speed.
 
 ## Keybinds:
 - Full keybind support NOT added yet.
