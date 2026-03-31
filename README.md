@@ -27,9 +27,20 @@
 - Basic keybinds (C- refers to CTRL):
   - `C-s` -> save file
   - `C-c` -> quit w/o saving
+
+- Movement keybinds:
+  - `C-n` -> next line
+  - `C-p` -> previous line
+  - `C-b` -> back one character
+  - `C-f` -> forward one character
+  - Arrow keys are also supported.
+
 - Note: TAB is automatically set to 4 spaces.
 
+## Possible Issues:
+- If the terminal running this is too small, you may encounter issues.
+
 ---
-v1.0.0-beta
+v1.0.1-beta
 - Starting from v1.0.0-beta, polyedit will be written using polyedit itself.
 - GPL-3.0 license. See LICENSE for more information.

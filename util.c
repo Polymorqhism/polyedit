@@ -46,6 +46,53 @@ void insert_key(char key, Cursor *cur, TargetFile *file)
     fflush(stdout);
 }
 
+void cur_up(Cursor *cur, TargetFile *file)
+{
+    if(cur->row > 0)
+        cur->row--;
+    if(cur->row < cur->scroll) {
+        cur->scroll = cur->row;
+        redraw_screen(cur, file);
+    }
+    if(cur->col > file->line_lengths[cur->row])
+        cur->col = file->line_lengths[cur->row];
+    printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
+    fflush(stdout);
+}
+
+void cur_down(Cursor *cur, TargetFile *file)
+{
+    if(cur->row < file->line_count-1)
+        cur->row++;
+    
+    if(cur->row - cur->scroll >= cur->terminal_height) {
+        cur->scroll = cur->row - cur->terminal_height + 1;
+        redraw_screen(cur, file);
+    }
+
+    if(cur->col > file->line_lengths[cur->row])
+        cur->col = file->line_lengths[cur->row];
+    
+    printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
+    fflush(stdout);        
+}
+
+void cur_forward(Cursor *cur, TargetFile *file)
+{
+    if(cur->col < file->line_lengths[cur->row])
+        cur->col++;
+    printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
+    fflush(stdout);
+}
+
+void cur_backward(Cursor *cur, TargetFile *file)
+{
+    if(cur->col > 0)
+        cur->col--;
+    printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
+    fflush(stdout);
+}
+
 void handle_key(char key, Cursor *cur, TargetFile *file)
 {
     char c;
@@ -55,40 +102,16 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
             read(STDIN_FILENO, &c, 1);
             switch(c) {
             case 'A':
-                if(cur->row > 0)
-                    cur->row--;
-                if(cur->row < cur->scroll) {
-                    cur->scroll = cur->row;
-                    redraw_screen(cur, file);
-                }
-                if(cur->col > file->line_lengths[cur->row])
-                    cur->col = file->line_lengths[cur->row];
-                printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
-                fflush(stdout);
+                cur_up(cur, file);
                 break;
             case 'B':
-                if(cur->row < file->line_count-1)
-                    cur->row++;
-                if(cur->row - cur->scroll >= cur->terminal_height) {
-                    cur->scroll = cur->row - cur->terminal_height + 1;
-                    redraw_screen(cur, file);
-                }
-                if(cur->col > file->line_lengths[cur->row])
-                    cur->col = file->line_lengths[cur->row];
-                printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
-                fflush(stdout);
+                cur_down(cur, file);
                 break;
             case 'C':
-                if(cur->col < file->line_lengths[cur->row])
-                    cur->col++;
-                printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
-                fflush(stdout);
+                cur_forward(cur, file);
                 break;
             case 'D':
-                if(cur->col > 0)
-                    cur->col--;
-                printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
-                fflush(stdout);
+                cur_backward(cur, file);
                 break;
             }
         }
@@ -212,6 +235,14 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
                 }
                 fclose(fp);
             }
+        } else if(key == 16){
+            cur_up(cur, file);
+        } else if(key == 14) {
+            cur_down(cur, file);
+        } else if(key == 2) {
+            cur_backward(cur, file);
+        } else if(key == 6) {
+            cur_forward(cur, file);
         } else if(key == 3) {
             disable_raw_mode();
             exit(0);
