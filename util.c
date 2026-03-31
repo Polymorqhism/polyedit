@@ -14,6 +14,15 @@ void disable_raw_mode()
     system("clear");
 }
 
+void redraw_screen(Cursor *cur, TargetFile *file)
+{
+    printf("\x1b[1;1H");
+    printf("\x1b[J");
+    for(int i = cur->scroll; i < cur->scroll + cur->terminal_height && i < file->line_count; i++) {
+        printf("%s\n", file->lines[i]);
+    }
+}
+
 void insert_key(char key, Cursor *cur, TargetFile *file)
 {
         file->lines[cur->row] = realloc(file->lines[cur->row], file->line_lengths[cur->row] + 2);
@@ -22,11 +31,10 @@ void insert_key(char key, Cursor *cur, TargetFile *file)
         file->lines[cur->row][cur->col] = key;
         file->line_lengths[cur->row]++;
         cur->col++;
-        printf("\x1b[%d;1H", cur->row+1); // sets cursor to beginning
+        printf("\x1b[%d;1H", cur->row - cur->scroll + 1);
         printf("\x1b[2K"); // clears line
         printf("%s", file->lines[cur->row]); // prints new line
-        printf("\x1b[%d;%dH", cur->row+1, cur->col+1); // sets cursor back to original position
-
+        printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col+1);
 }
 
 void handle_key(char key, Cursor *cur, TargetFile *file)
@@ -40,12 +48,21 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
             case 'A':
                 if(cur->row > 0)
                     cur->row--;
+                if(cur->row < cur->scroll) {
+                    cur->scroll--;
+                    redraw_screen(cur, file);
+                }
+
                 if(cur->col > strlen(file->lines[cur->row]))
                     cur->col = strlen(file->lines[cur->row]);
                 break;
             case 'B':
                 if(cur->row < file->line_count-1)
                     cur->row++;
+                if(cur->row - cur->scroll >= cur->terminal_height) {
+                    cur->scroll++;
+                    redraw_screen(cur, file);
+                }
                 if(cur->col > strlen(file->lines[cur->row]))
                     cur->col = strlen(file->lines[cur->row]);
                 break;
@@ -59,7 +76,7 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
                 break;
             }
 
-            printf("\x1b[%d;%dH", cur->row+1, cur->col+1);
+            printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col+1);
         }
     } else {
         if(key == 127) {
@@ -67,29 +84,37 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
                 memmove(&file->lines[cur->row][cur->col - 1], &file->lines[cur->row][cur->col], file->line_lengths[cur->row] - cur->col + 1);
                 file->line_lengths[cur->row]--;
                 cur->col--;
-                printf("\x1b[%d;1H", cur->row+1); // col 1
+                printf("\x1b[%d;1H", cur->row - cur->scroll + 1);
                 printf("\x1b[2K"); // clear ENTIRE line
                 printf("%s", file->lines[cur->row]); // re-render line
                 printf("\x1b[%d;%dH", cur->row+1, cur->col+1); // bring it back
+                printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col+1);
             }
             else if(cur->col == 0 && cur->row > 0) {
                 int prev_len = file->line_lengths[cur->row-1];
                 int curr_len = file->line_lengths[cur->row];
+
                 file->lines[cur->row-1] = realloc(file->lines[cur->row-1], prev_len + curr_len + 1);
                 strcat(file->lines[cur->row-1], file->lines[cur->row]);
+
                 free(file->lines[cur->row]);
-                memmove(&file->lines[cur->row], &file->lines[cur->row+1], (file->line_count - cur->row - 1) * sizeof(char *));
-                memmove(&file->line_lengths[cur->row], &file->line_lengths[cur->row+1], (file->line_count - cur->row - 1) * sizeof(int));
+
+                if(file->line_count - cur->row - 1 > 0) {
+                    memmove(&file->lines[cur->row], &file->lines[cur->row+1], (file->line_count - cur->row - 1) * sizeof(char *));
+                    memmove(&file->line_lengths[cur->row], &file->line_lengths[cur->row+1], (file->line_count - cur->row - 1) * sizeof(int));
+                }
+
                 file->line_lengths[cur->row-1] = prev_len + curr_len;
                 file->line_count--;
                 cur->col = prev_len;
                 cur->row--;
-                printf("\x1b[%d;1H", cur->row+1);
+
+                printf("\x1b[%d;1H", cur->row - cur->scroll + 1);
                 printf("\x1b[J");
-                for(int i = cur->row; i < file->line_count; i++) {
+                for(int i = cur->row; i < file->line_count && i < cur->scroll + cur->terminal_height; i++) {
                     printf("%s\n", file->lines[i]);
                 }
-                printf("\x1b[%d;%dH", cur->row+1, cur->col+1);
+                printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col+1);
             }
         } else if(key == 10 || key == 13) {
             char *new_line = strndup(&file->lines[cur->row][cur->col], file->line_lengths[cur->row] - cur->col);
@@ -109,7 +134,7 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
             for(int i = cur->row - 1; i < file->line_count; i++) {
                 printf("%s\n", file->lines[i]);
             }
-            printf("\x1b[%d;%dH", cur->row + 1, cur->col + 1);
+            printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
         } else if(key == 9) { // handle tab
             for(int i = 0; i<4; i++) {
                 insert_key(' ', cur, file);

@@ -14,8 +14,8 @@ typedef struct {
     int row;
     int col;
 
-    int sc_row;
-    int sc_col;
+    int terminal_height;
+    int scroll;
 } Cursor;
 
 extern struct termios original;
