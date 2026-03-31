@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <string.h>
 #include "polyedit.h"
 #include <stdlib.h>
@@ -6,10 +7,92 @@
 #include <termios.h>
 #include <unistd.h>
 
+void handle_key(char key, Cursor *cur, TargetFile *file)
+{
+    char c;
+    if(key == 27) { // multi-byte incoming
+        read(STDIN_FILENO, &c, 1);
+        if(c == '[') { // arrow key incoming probably
+            read(STDIN_FILENO, &c, 1);
+            switch(c) {
+            case 'A':
+                if(cur->row > 0)
+                    cur->row--;
+                if(cur->col > strlen(file->lines[cur->row]))
+                    cur->col = strlen(file->lines[cur->row]);
+                break;
+            case 'B':
+                if(cur->row < file->line_count-1)
+                    cur->row++;
+                if(cur->col > strlen(file->lines[cur->row]))
+                    cur->col = strlen(file->lines[cur->row]);
+                break;
+            case 'C':
+                if(cur->col < strlen(file->lines[cur->row]))
+                    cur->col++;
+                break;
+            case 'D':
+                if(cur->col > 0)
+                    cur->col--;
+                break;
+            }
+
+            printf("\x1b[%d;%dH", cur->row+1, cur->col+1);
+        }
+    } else {
+        if(key == 127) {
+            if(cur->col > 0) {
+                memmove(&file->lines[cur->row][cur->col - 1], &file->lines[cur->row][cur->col], file->line_lengths[cur->row] - cur->col + 1);
+                file->line_lengths[cur->row]--;
+                cur->col--;
+                printf("\x1b[%d;1H", cur->row+1); // col 1
+                printf("\x1b[2K"); // clear ENTIRE line
+                printf("%s", file->lines[cur->row]); // re-render line
+                printf("\x1b[%d;%dH", cur->row+1, cur->col+1); // bring it back
+            }
+            else if(cur->col == 0 && cur->row > 0) {
+                int prev_len = file->line_lengths[cur->row-1];
+                int curr_len = file->line_lengths[cur->row];
+                file->lines[cur->row-1] = realloc(file->lines[cur->row-1], prev_len + curr_len + 1);
+                strcat(file->lines[cur->row-1], file->lines[cur->row]);
+                free(file->lines[cur->row]);
+                memmove(&file->lines[cur->row], &file->lines[cur->row+1], (file->line_count - cur->row - 1) * sizeof(char *));
+                memmove(&file->line_lengths[cur->row], &file->line_lengths[cur->row+1], (file->line_count - cur->row - 1) * sizeof(int));
+                file->line_lengths[cur->row-1] = prev_len + curr_len;
+                file->line_count--;
+                cur->col = prev_len;
+                cur->row--;
+                printf("\x1b[%d;1H", cur->row+1);
+                printf("\x1b[J");
+                for(int i = cur->row; i < file->line_count; i++) {
+                    printf("%s\n", file->lines[i]);
+                }
+                printf("\x1b[%d;%dH", cur->row+1, cur->col+1);
+            }
+        }
+
+        if(!isprint(key)) {
+            return;
+        }
+
+
+        file->lines[cur->row] = realloc(file->lines[cur->row], file->line_lengths[cur->row] + 2);
+
+        memmove(&file->lines[cur->row][cur->col + 1], &file->lines[cur->row][cur->col], file->line_lengths[cur->row] - cur->col + 1);
+        file->lines[cur->row][cur->col] = key;
+        file->line_lengths[cur->row]++;
+        cur->col++;
+        printf("\x1b[%d;1H", cur->row+1); // sets cursor to beginning
+        printf("\x1b[2K"); // clears line
+        printf("%s", file->lines[cur->row]); // prints new line
+        printf("\x1b[%d;%dH", cur->row+1, cur->col+1); // sets cursor back to original position
+    }
+}
 
 void disable_raw_mode()
 {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
+    system("clear");
 }
 
 void handle_signal(int sig)
