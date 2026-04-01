@@ -55,8 +55,10 @@
   - `sudo cp build/polyedit /usr/bin/`
 
 
-## Possible Issues:
+## Note:
 - If the terminal running this is too small, you may encounter issues.
+- TAB is automatically set to 4 spaces.
+- The syntax highlighting is heavily inspired by [gruber-darker](https://github.com/rexim/gruber-darker-theme) (created by Tsoding/rexim).
 
 ---
 v1.1.3-beta
