@@ -107,7 +107,13 @@ void redraw_screen(Cursor *cur, TargetFile *file)
 
     for (int i = start; i < end; i++) {
         // printf("%s", file->lines[i]);
-        highlight_line(file->lines[i], file->line_lengths[i]);
+
+        if(file->do_highlight == 1) {
+            highlight_line(file->lines[i], file->line_lengths[i]);
+        } else {
+            printf("%s", file->lines[i]);
+        }
+
         if (i < end - 1) {
             printf("\n");
         }    

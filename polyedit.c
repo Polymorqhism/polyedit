@@ -18,8 +18,8 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2) {
-        printf("Invalid command usage.\n\n%s [file name]\n", argv[0]);
+    if (argc > 3) {
+        printf("Invalid command usage.\n\n%s [file name]\n\nUse -n after specifying the file name to explicitly turn off C syntax highlighting.", argv[0]);
         return 1;
     }
 
@@ -41,6 +41,13 @@ int main(int argc, char *argv[])
     }
 
     file->name = argv[1];
+
+    file->do_highlight = 1;
+    if(argc > 2) {
+        if(strcmp(argv[2], "-n") == 0) {
+            file->do_highlight = 0;
+        }
+    }
 
     if (handle_file_intake(argv[1], file)) {
         free(file);

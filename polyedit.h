@@ -8,6 +8,7 @@ typedef struct {
     long size;
     int line_count;
     int *line_lengths;
+    int do_highlight;
 } TargetFile;
 
 typedef struct {

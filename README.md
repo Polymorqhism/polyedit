@@ -22,7 +22,7 @@
 - Developed for systems based on the Linux kernel. Compatibility with other operating systems (e.g., Windows, BSD) is neither guaranteed nor supported.
 - Aims to be lighter than alternatives like nano, micro, emacs and vim while maintaining speed.
 
-## Keybinds:
+## Features:
 - Full keybind support NOT added yet.
 - Basic keybinds (C- refers to CTRL):
   - `C-s` -> save file
@@ -33,9 +33,11 @@
   - `C-p` -> previous line
   - `C-b` -> back one character
   - `C-f` -> forward one character
+  - `C-j` -> terminal default bound to RET (Enter)
   - Arrow keys are also supported.
 
 - Note: TAB is automatically set to 4 spaces.
+- Partial (dumb) syntax highlighting targeted for the C language. It can be turned off with `-n` flag after the file specification.
 
 ## Installation:
 - `git clone https://github.com/Polymorqhism/polyedit`
@@ -53,6 +55,6 @@
 - If the terminal running this is too small, you may encounter issues.
 
 ---
-v1.1.0-beta
+v1.1.1-beta
 - Starting from v1.0.0-beta, polyedit will be written using polyedit itself.
 - GPL-3.0 license. See LICENSE for more information.
