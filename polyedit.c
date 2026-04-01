@@ -1,10 +1,8 @@
 /*
-
   CREDITS:
   disable_raw_mode() and enable_raw_mode() were directly taken from:
   https://viewsourcecode.org/snaptoken/kilo/02.enteringRawMode.html
   with minimal modification
-
 */
 
 #define _POSIX_C_SOURCE 200809L
@@ -17,15 +15,6 @@
 #include <termios.h>
 #include <unistd.h>
 #include <signal.h>
-
-struct termios original;
-
-void get_height(Cursor *cur)
-{
-    struct winsize ws;
-    ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
-    cur->terminal_height = ws.ws_row;
-}
 
 int main(int argc, char *argv[])
 {
@@ -108,18 +97,12 @@ int main(int argc, char *argv[])
 
     enable_raw_mode();
 
-    printf("\x1b[2J");
-    printf("\x1b[H");
-
-    for(int i = 0; i < file->line_count && i < cursor.terminal_height; i++) {
-        printf("%s\n", file->lines[i]);
-    }
-
     cursor.scroll = 0;
     cursor.row = 0;
     cursor.col = 0;
 
-    printf("\x1b[H");
+    redraw_screen(&cursor, file);
+    printf("\x1b[%d;%dH", cursor.row - cursor.scroll + 1, cursor.col + 1);
     fflush(stdout);
 
     char c;

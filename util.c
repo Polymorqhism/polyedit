@@ -9,6 +9,15 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
+struct termios original;
+ 
+void get_height(Cursor *cur)
+{
+    struct winsize ws;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+    cur->terminal_height = ws.ws_row;
+}
+
 void disable_raw_mode()
 {
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
@@ -18,8 +27,9 @@ void disable_raw_mode()
 
 void redraw_screen(Cursor *cur, TargetFile *file)
 {
-    printf("\x1b[H");
-    printf("\x1b[J");
+    get_height(cur);    
+    printf("\x1b[2J");  // Clear entire screen
+    printf("\x1b[H");   // Move cursor to top-left
 
     int start = cur->scroll;
     int end = start + cur->terminal_height;
@@ -28,7 +38,10 @@ void redraw_screen(Cursor *cur, TargetFile *file)
     }
 
     for (int i = start; i < end; i++) {
-        printf("%s\n", file->lines[i]);
+        printf("%s", file->lines[i]);
+        if (i < end - 1) {
+            printf("\n");
+        }    
     }
 
     fflush(stdout);
