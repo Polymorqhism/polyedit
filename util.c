@@ -20,10 +20,78 @@ void get_height(Cursor *cur)
 
 void disable_raw_mode()
 {
+    printf("\x1b]112\x07");
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &original);
-    system("clear");
 }
 
+const char *keywords[34] = {
+    "auto", "break", "case", "char", "const", "continue", "default", "do",
+    "double", "else", "enum", "extern", "float", "for", "goto", "if",
+    "inline", "int", "long", "register", "restrict", "return", "short", "signed",
+    "sizeof", "static", "struct", "switch", "typedef", "union", "unsigned", "void",
+    "volatile", "while"
+};
+
+int keyw_len = 34;
+
+void highlight_line(const char *line, int line_length)
+{
+    int i = 0;
+    while(i < line_length) {
+        if(isspace(line[i])) {
+            printf("%c", line[i]);
+            i++;
+        }
+        if(isalpha(line[i]) || line[i] == '_') {
+            char tmp[32];
+            int l = 0;
+
+            while(i < line_length && (isalnum(line[i]) || line[i] == '_')) {
+                tmp[l] = line[i];
+                i++;
+                l++;
+            }
+            tmp[l] = '\0';
+
+            int found = 0;
+            for(int i = 0; i<keyw_len; i++) {
+                if(strcmp(tmp, keywords[i]) == 0) {
+                    printf("\x1b[1;38;2;255;221;51m%s\x1b[0m", tmp);
+                    found = 1;
+                    break;
+                }
+            }
+
+            if(!found) {
+                printf("%s", tmp);
+            }
+        } else if(line[i] == '/' && i + 1 < line_length && line[i + 1] == '/') {
+            printf("\x1b[38;2;188;129;55m");
+            printf("%s", &line[i]);
+            printf("\x1b[0m");
+            break;
+        } else if(line[i] == '"') {
+            printf("\x1b[38;2;112;196;53m");
+            printf("%c", line[i]);
+            i++;
+
+            while(i < line_length && line[i] != '"') {
+                printf("%c", line[i]);
+                i++;
+            }
+
+            if(i < line_length) {
+                printf("%c", line[i]);
+                i++;
+            }
+
+            printf("\x1b[0m");
+        } else {
+            printf("%c", line[i]);
+            i++;
+        }
+    }
+}
 
 void redraw_screen(Cursor *cur, TargetFile *file)
 {
@@ -38,7 +106,8 @@ void redraw_screen(Cursor *cur, TargetFile *file)
     }
 
     for (int i = start; i < end; i++) {
-        printf("%s", file->lines[i]);
+        // printf("%s", file->lines[i]);
+        highlight_line(file->lines[i], file->line_lengths[i]);
         if (i < end - 1) {
             printf("\n");
         }    
@@ -274,6 +343,7 @@ void handle_signal(int sig)
 
 void enable_raw_mode()
 {
+    printf("\x1b]12;#ffdd33\x07");
     if (tcgetattr(STDIN_FILENO, &original) == -1) {
         perror("tcgetattr");
         exit(1);
