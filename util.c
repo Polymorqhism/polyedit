@@ -41,8 +41,7 @@ void highlight_line(const char *line, int line_length)
         if(isspace(line[i])) {
             printf("%c", line[i]);
             i++;
-        }
-        if(isalpha(line[i]) || line[i] == '_') {
+        } else if(isalpha(line[i]) || line[i] == '_') {
             char tmp[32];
             int l = 0;
 
@@ -129,7 +128,10 @@ void insert_key(char key, Cursor *cur, TargetFile *file)
     file->lines[cur->row][cur->col] = key;
     file->line_lengths[cur->row]++;
     cur->col++;
-    redraw_screen(cur, file);
+    
+    printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, 1);
+    printf("\x1b[K");
+    highlight_line(file->lines[cur->row], file->line_lengths[cur->row]);
     printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
     fflush(stdout);
 }
@@ -334,6 +336,10 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
         } else if(key == 3) {
             disable_raw_mode();
             exit(0);
+        } else if(key == 5) {
+            cur->col = file->line_lengths[cur->row];
+            printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
+            fflush(stdout);
         } else if(isprint(key)) {
             insert_key(key, cur, file);
         }
