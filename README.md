@@ -13,14 +13,14 @@
    Minimal; simple.
 </p>
 
-> [!CAUTION]
-> polyedit is unfinished. Expect bugs; do not use this for high value files. Linux only.
+> [!TIP]
+> Refer to Releases for quickly downloading the binary.
 ---
 
 ## What it is:
 - Minimal TUI editor.
 - Developed for systems based on the Linux kernel. Compatibility with other operating systems (e.g., Windows, BSD) is neither guaranteed nor supported.
-- Aims to be lighter than alternatives like nano, micro, emacs and vim while maintaining speed.
+- Aims to be simpler than alternatives like nano, micro, emacs and vim while maintaining the core features.
 
 ## Features:
 - Full keybind support NOT added yet.
@@ -62,5 +62,5 @@
 
 ---
 v1.1.3-beta
-- Starting from v1.0.0-beta, polyedit will be written using polyedit itself.
+- Starting from v1.0.0-beta, polyedit will be written using polyedit itself. This ensures issues are noticed as quickly as possible.
 - GPL-3.0 license. See LICENSE for more information.
