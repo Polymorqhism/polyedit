@@ -9,3 +9,4 @@ int handle_file_intake(char *file_name, TargetFile *target);
 void handle_key(char key, Cursor *cur, TargetFile *file);
 void redraw_screen(Cursor *cur, TargetFile *file);
 void get_height(Cursor *cur);
+int get_width();

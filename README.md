@@ -24,7 +24,8 @@
 
 ## Features:
 - Full keybind support NOT added yet.
-- Basic keybinds (C- refers to CTRL):
+- Note: `C-` refers to CTRL while `M-` refers to Meta (ESC/ALT)
+- Basic keybinds:
   - `C-s` -> save file
   - `C-c` -> quit w/o saving
 
@@ -32,9 +33,12 @@
   - `C-n` -> next line
   - `C-p` -> previous line
   - `C-b` -> back one character
+    - `M-b` -> back one word
   - `C-f` -> forward one character
+    - `M-f` -> forward one word
   - `C-j` -> terminal default bound to RET (Enter)
-  - Arrow keys are also supported.
+  - `C-e` -> move to end of current line
+  - Arrow keys are also supported for basic movement; it is highly recommended to use the keybinds mentioned above for speed.
 
 - Note: TAB is automatically set to 4 spaces.
 - Partial (dumb) syntax highlighting targeted for the C language. It can be turned off with `-n` flag after the file specification.
@@ -55,6 +59,6 @@
 - If the terminal running this is too small, you may encounter issues.
 
 ---
-v1.1.2-beta
+v1.1.3-beta
 - Starting from v1.0.0-beta, polyedit will be written using polyedit itself.
 - GPL-3.0 license. See LICENSE for more information.

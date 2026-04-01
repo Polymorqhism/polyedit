@@ -6,6 +6,7 @@
 */
 
 #define _POSIX_C_SOURCE 200809L
+#define VERSION "v1.1.3-beta"
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include "util.h"
@@ -53,6 +54,7 @@ int main(int argc, char *argv[])
         free(file);
         return 1;
     }
+    
 
     if(file->size == 0) {
         file->line_count = 1;
@@ -108,11 +110,25 @@ int main(int argc, char *argv[])
     cursor.row = 0;
     cursor.col = 0;
 
+    get_height(&cursor);
+
+
+    int middle_row = cursor.terminal_height / 2;
+    int middle_col = (get_width()/2) - (strlen(VERSION) / 2);
+
+    printf("\x1b[2J");
+    printf("\x1b[%d;%dH", middle_row, middle_col);
+    printf("polyedit %s", VERSION);
+    fflush(stdout);
+
+
+    char c;
+    read(STDIN_FILENO, &c, 1);
+
     redraw_screen(&cursor, file);
     printf("\x1b[%d;%dH", cursor.row - cursor.scroll + 1, cursor.col + 1);
     fflush(stdout);
 
-    char c;
     while (read(STDIN_FILENO, &c, 1) == 1) {
         handle_key(c, &cursor, file);
     }
