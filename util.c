@@ -181,7 +181,7 @@ void cur_forward(Cursor *cur, TargetFile *file)
     fflush(stdout);
 }
 
-void cur_backward(Cursor *cur, TargetFile *file)
+void cur_backward(Cursor *cur)
 {
     if(cur->col > 0)
         cur->col--;
@@ -207,13 +207,13 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
                 cur_forward(cur, file);
                 break;
             case 'D':
-                cur_backward(cur, file);
+                cur_backward(cur);
                 break;
             }
         } else if(c == 'b') {
             if(cur->col > 0) {
                 cur->col--;
-                while(cur->col > 0 && !isspace(file->lines[cur->row][cur->col])) {
+                while(cur->col > 0 && (isalnum(file->lines[cur->row][cur->col]) || file->lines[cur->row][cur->col] == '_') ) {
                     cur->col--;
                 }
             }
@@ -222,7 +222,7 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
         } else if(c == 'f') {
             if(cur->col < file->line_lengths[cur->row]) {
                 cur->col++;
-                while(cur->col < file->line_lengths[cur->row] && !isspace(file->lines[cur->row][cur->col])) {
+                while(cur->col < file->line_lengths[cur->row] && (isalnum(file->lines[cur->row][cur->col]) || file->lines[cur->row][cur->col] == '_') ) {
                     cur->col++;
                 }
             }
@@ -353,7 +353,7 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
     } else if(key == 14) {
         cur_down(cur, file);
     } else if(key == 2) {
-        cur_backward(cur, file);
+        cur_backward(cur);
     } else if(key == 6) {
         cur_forward(cur, file);
     } else if(key == 3) {
@@ -361,6 +361,62 @@ void handle_key(char key, Cursor *cur, TargetFile *file)
         exit(0);
     } else if(key == 5) {
         cur->col = file->line_lengths[cur->row];
+        printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
+        fflush(stdout);
+    } else if(key == 24) {
+        free(file->lines[cur->row]);
+
+        int new_count = file->line_count - 1;
+
+        char **new_lines = malloc(sizeof(char* ) * new_count);
+        int *new_length = malloc(sizeof(int) * new_count);
+
+        for(int i = 0; i<cur->row; i++) {
+            new_lines[i] = file->lines[i];
+            new_length[i] = file->line_lengths[i];
+        }
+
+        for(int i = cur->row+1; i<file->line_count; i++) {
+            new_lines[i-1] = file->lines[i];
+            new_length[i-1] = file->line_lengths[i];
+        }
+
+        free(file->lines);
+        free(file->line_lengths);
+
+        file->lines = new_lines;
+        file->line_lengths = new_length;
+        file->line_count = new_count;
+
+        if(cur->row >= file->line_count) {
+            cur->row = file->line_count - 1;
+        }
+
+        cur->col = 0;
+        redraw_screen(cur, file);
+    } else if(key == 23) {
+        if(cur->col > 0) {
+            int start_col = cur->col;
+            cur->col--;
+            while(cur->col > 0 && (isalnum(file->lines[cur->row][cur->col]) || file->lines[cur->row][cur->col] == '_')) {
+                cur->col--;
+            }
+
+            if(!(isalnum(file->lines[cur->row][cur->col]) || file->lines[cur->row][cur->col] == '_') && cur->col < file->line_lengths[cur->row]) {
+                cur->col++;
+            }
+
+        int len = file->line_lengths[cur->row];
+        int delete_len = start_col - cur->col;
+        memmove(&file->lines[cur->row][cur->col], &file->lines[cur->row][start_col], len - start_col + 1);
+        file->line_lengths[cur->row] -= delete_len;
+        
+        printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, 1);
+        printf("\x1b[K");
+        highlight_line(file->lines[cur->row], file->line_lengths[cur->row]);
+        printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
+        fflush(stdout);
+        }
         printf("\x1b[%d;%dH", cur->row - cur->scroll + 1, cur->col + 1);
         fflush(stdout);
     } else if(isprint(key)) {

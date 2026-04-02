@@ -40,8 +40,12 @@
   - `C-e` -> move to end of current line
   - Arrow keys are also supported for basic movement; it is highly recommended to use the keybinds mentioned above for speed.
 
+- Editing Keybinds:
+  - `C-x` -> delete line
+  - `C-w` -> delete word backward
+
 - Note: TAB is automatically set to 4 spaces.
-- Partial (dumb) syntax highlighting targeted for the C language. It can be turned off with `-n` flag after the file specification.
+- Syntax highlighting targeted for the C language. It can be turned off with `-n` flag after the file specification.
 
 ## Installation:
 - `git clone https://github.com/Polymorqhism/polyedit`
@@ -59,8 +63,9 @@
 - If the terminal running this is too small, you may encounter issues.
 - TAB is automatically set to 4 spaces.
 - The syntax highlighting is heavily inspired by [gruber-darker](https://github.com/rexim/gruber-darker-theme) (created by Tsoding/rexim).
+  - The syntax highlighting is made for ease of understanding code. It is not perfect.
 
 ---
-v1.1.3-beta
+v1.2.0
 - Starting from v1.0.0-beta, polyedit will be written using polyedit itself. This ensures issues are noticed as quickly as possible.
 - GPL-3.0 license. See LICENSE for more information.

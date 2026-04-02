@@ -6,7 +6,7 @@
 */
 
 #define _POSIX_C_SOURCE 200809L
-#define VERSION "v1.1.3-beta"
+#define VERSION "v1.2.0"
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include "util.h"
@@ -19,8 +19,8 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc > 3) {
-        printf("Invalid command usage.\n\n%s [file name]\n\nUse -n after specifying the file name to explicitly turn off C syntax highlighting.", argv[0]);
+    if (argc > 3 || argc < 2) {
+        printf("Invalid command usage.\n\n%s [file name]\n\nUse -n after specifying the file name to explicitly turn off C syntax highlighting.\n", argv[0]);
         return 1;
     }
 
