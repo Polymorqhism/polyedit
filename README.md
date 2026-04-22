@@ -62,6 +62,7 @@
 ## Note:
 - If the terminal running this is too small, you may encounter issues.
 - TAB is automatically set to 4 spaces.
+- Uses ANSI Escape codes.
 - The syntax highlighting is heavily inspired by [gruber-darker](https://github.com/rexim/gruber-darker-theme) (created by Tsoding/rexim).
   - The syntax highlighting is made for ease of understanding code. It is not perfect.
 
